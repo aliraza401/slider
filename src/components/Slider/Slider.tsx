@@ -20,15 +20,7 @@ export const Slider = ({
   height,
 }: SliderProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [transitioning, setTransitioning] = useState(false);
   const childrenLength = React.Children.count(children);
-
-  useEffect(() => {
-    if (transitioning) {
-      const timer = setTimeout(() => setTransitioning(false), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [transitioning]);
 
   const getSlideClass = (index: number) => {
     const relativeIndex =
@@ -64,12 +56,10 @@ export const Slider = ({
   };
 
   const prevSlide = () => {
-    setTransitioning(true);
     setCurrentIndex((currentIndex - 1 + childrenLength) % childrenLength);
   };
 
   const nextSlide = () => {
-    setTransitioning(true);
     setCurrentIndex((currentIndex + 1) % childrenLength);
   };
 
