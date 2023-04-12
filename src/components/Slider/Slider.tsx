@@ -10,11 +10,10 @@ import {
 import { useWindowWidth } from "./../../hooks/useWindowWidth";
 import { useThrottle } from "../../hooks/useThrottle";
 
-export const Slider = ({ children }: SliderProps) => {
+export const Slider = ({ children, showSlides }: SliderProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const childrenLength = React.Children.count(children);
   const { windowWidth } = useWindowWidth();
-  const showSlides = 3;
 
   const getSlideClass = (index: number) => {
     const relativeIndex =
@@ -58,9 +57,9 @@ export const Slider = ({ children }: SliderProps) => {
   const throttleNextSlide = useThrottle(nextSlide, 1000);
 
   return (
-    <SliderContainer>
+    <SliderContainer showSlides={showSlides}>
       {React.Children.map(children, (child, index) => (
-        <Slide width={windowWidth} key={index} className={getSlideClass(index)}>
+        <Slide showSlides={showSlides} width={windowWidth} key={index} className={getSlideClass(index)}>
           {child}
         </Slide>
       ))}
