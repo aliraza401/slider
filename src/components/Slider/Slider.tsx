@@ -1,68 +1,92 @@
-import React, { useRef, useState } from "react";
-import { SliderProps } from "./Slider.interface";
-import { SlyledSlider, StyledSlide } from "./Slider.styled";
+import React, { useEffect, useState } from "react";
+import {
+  SliderContainer,
+  Slide,
+  PrevButton,
+  NextButton,
+} from "./Slider.styled";
 
-export const Slider: React.FC<SliderProps> = ({ children }) => {
-  const carouselRef = useRef<any>(null);
-  const [currDeg, setCurrentDeg] = useState(0);
-  const [currIndex, setCurrentIndex] = useState(0);
-  const childrensLength = children.length - 1;
+interface SliderProps {
+  children: React.ReactNode;
+  showSlides: 3 | 5;
+  width: string;
+  height: string;
+}
 
-  const getIndevViewPortClass = React.useCallback(
-    (currIndex: number, index: number): string => {
-      if (index === currIndex) return "active-view";
-      if (index === currIndex - 1 || index === currIndex + 1)
-        return "active-view";
-      if (currIndex === childrensLength && index === 0) return "active-view";
-      if (currIndex === 0 && index === childrensLength) return "active-view";
-      return "";
-    },
-    [currIndex]
-  );
+export const Slider = ({
+  children,
+  showSlides,
+  width,
+  height,
+}: SliderProps) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [transitioning, setTransitioning] = useState(false);
+  const childrenLength = React.Children.count(children);
 
-  const rotate = (event: any) => {
-    let nextDeg = currDeg;
-    if (event == "n") {
-      nextDeg -= 60;
-      setCurrentIndex(currIndex === childrensLength ? 0 : currIndex + 1);
-    } else if (event == "p") {
-      nextDeg += 60;
-      setCurrentIndex(currIndex === 0 ? childrensLength : currIndex - 1);
-    } else {
-      return;
+  useEffect(() => {
+    if (transitioning) {
+      const timer = setTimeout(() => setTransitioning(false), 1000);
+      return () => clearTimeout(timer);
     }
+  }, [transitioning]);
 
-    setCurrentDeg(nextDeg);
+  const getSlideClass = (index: number) => {
+    const relativeIndex =
+      (index - currentIndex + childrenLength) % childrenLength;
 
-    carouselRef.current.style.webkitTransform = `rotateY(${nextDeg}deg)`;
-    carouselRef.current.style.MozTransform = `rotateY(${nextDeg}deg)`;
-    carouselRef.current.style.oTransform = `rotateY(${nextDeg}deg)`;
-    carouselRef.current.style.transform = `rotateY(${nextDeg}deg)`;
+    if (showSlides === 3) {
+      switch (relativeIndex) {
+        case 0:
+          return "center";
+        case 1:
+          return "right-curved";
+        case childrenLength - 1:
+          return "left-curved";
+        default:
+          return "hidden";
+      }
+    } else {
+      switch (relativeIndex) {
+        case 0:
+          return "center";
+        case 1:
+          return "right";
+        case childrenLength - 1:
+          return "left";
+        case 2:
+          return "right-far";
+        case childrenLength - 2:
+          return "left-far";
+        default:
+          return "hidden";
+      }
+    }
+  };
+
+  const prevSlide = () => {
+    setTransitioning(true);
+    setCurrentIndex((currentIndex - 1 + childrenLength) % childrenLength);
+  };
+
+  const nextSlide = () => {
+    setTransitioning(true);
+    setCurrentIndex((currentIndex + 1) % childrenLength);
   };
 
   return (
-    <SlyledSlider>
-      <div className="carousel-box">
-        <div className="carousel" ref={carouselRef}>
-          {React.Children.map(children, (child, index) => (
-            <StyledSlide
-              index={index}
-              key={index}
-              className={`item ${getIndevViewPortClass(currIndex, index)}`}
-            >
-              {child}
-            </StyledSlide>
-          ))}
-        </div>
-      </div>
-      <div className="action-buttons">
-        <button className="prev" onClick={() => rotate("p")}>
-          {"<"}
-        </button>
-        <button className="next" onClick={() => rotate("n")}>
-          {">"}
-        </button>
-      </div>
-    </SlyledSlider>
+    <SliderContainer height={height}>
+      {React.Children.map(children, (child, index) => (
+        <Slide
+          key={index}
+          width={width}
+          height={height}
+          className={getSlideClass(index)}
+        >
+          {child}
+        </Slide>
+      ))}
+      <PrevButton onClick={prevSlide}>&lt;</PrevButton>
+      <NextButton onClick={nextSlide}>&gt;</NextButton>
+    </SliderContainer>
   );
 };
