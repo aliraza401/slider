@@ -1,18 +1,49 @@
 import styled from "styled-components";
 import { StyledSliderContainerProps } from "./Slider.interface";
 
+function getScaleValue(widthCalculated: number) {
+  let scaleValue;
+
+  switch (true) {
+    case widthCalculated > 1800:
+      scaleValue = 0.19;
+      break;
+    case widthCalculated > 1700 && widthCalculated <= 1800:
+      scaleValue = 0.26;
+      break;
+    case widthCalculated >= 1600 && widthCalculated <= 1700:
+      scaleValue = 0.3;
+      break;
+    case widthCalculated >= 1400 && widthCalculated <= 1600:
+      scaleValue = 0.34;
+      break;
+    case widthCalculated >= 1300 && widthCalculated <= 1400:
+      scaleValue = 0.4;
+      break;
+    case widthCalculated >= 1200 && widthCalculated <= 1300:
+      scaleValue = 0.45;
+      break;
+    case widthCalculated >= 1000 && widthCalculated <= 1200:
+      scaleValue = 0.5;
+      break;
+    default:
+      scaleValue = 0.6;
+  }
+
+  return scaleValue;
+}
+
 export const SliderContainer = styled.div<StyledSliderContainerProps>`
   width: 100%;
-  height: ${({ height }) => height};
+  height: 65vh;
+  /* height: ${({ height }) => height}; */
   position: relative;
   overflow: hidden;
 `;
 
 export const Slide = styled.div<StyledSliderContainerProps>`
-  width: ${({ width }) => width};
-  height: ${({ height }) => height};
-  max-width: 600px;
-  max-height: 100%;
+  width: 60vw;
+  height: 65vh;
   position: absolute;
   top: 50%;
   left: 50%;
@@ -35,33 +66,42 @@ export const Slide = styled.div<StyledSliderContainerProps>`
     z-index: 2;
   }
 
-  &.left-curved {
-    transform: translate(-123%, -50%) scale(0.5) perspective(500px)
-      rotateY(-65deg);
-    z-index: 2;
-  }
+  ${({ width }) => {
+    const widthCalculated = width || window.innerWidth;
+    const scaleValue = getScaleValue(+widthCalculated);
 
-  &.right-curved {
-    transform: translate(23%, -50%) scale(0.5) perspective(500px) rotateY(65deg);
-    z-index: 2;
-  }
+    console.log({ width, scaleValue });
+    return `
+      &.left-curved {
+        transform: translate(-138%, -50%) scale(${scaleValue}) perspective(500px) rotateY(-45deg);
+        z-index: 2;
+        opacity: 0.85;
+      }
+
+      &.right-curved {
+        transform: translate(38%, -50%) scale(${scaleValue}) perspective(500px) rotateY(45deg);
+        z-index: 2;
+        opacity: 0.85;
+      }
+    `;
+  }}
 
   &.left-far {
-    transform: translate(-223%, -50%) scale(0.6) perspective(500px)
-      rotateY(-68deg);
+    transform: translate(-247%, -50%) scale(0.82) perspective(500px)
+      rotateY(-34deg);
     z-index: 1;
   }
 
   &.right-far {
-    transform: translate(120%, -50%) scale(0.6) perspective(500px)
-      rotateY(72deg);
+    transform: translate(147%, -50%) scale(0.82) perspective(500px)
+      rotateY(34deg);
     z-index: 1;
   }
 
   &.hidden {
     visibility: hidden;
-    transform: translate(-50%, -50%) scale(0) perspective(500px) rotateY(90deg);
-    transition: 0s;
+    /* transform: translate(-50%, -50%) scale(0) perspective(500px) rotateY(90deg); */
+    /* transition: 0s; */
   }
 
   @media screen and (max-width: 1024px) {
@@ -96,7 +136,7 @@ export const PrevButton = styled.button`
   transform: translateY(-50%);
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 45px;
   cursor: pointer;
   z-index: 9;
 `;
@@ -108,7 +148,7 @@ export const NextButton = styled.button`
   transform: translateY(-50%);
   background: none;
   border: none;
-  font-size: 24px;
+  font-size: 45px;
   cursor: pointer;
   z-index: 9;
 `;

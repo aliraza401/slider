@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+import { SliderProps } from "./Slider.interface";
 import {
   SliderContainer,
   Slide,
@@ -6,21 +7,14 @@ import {
   NextButton,
 } from "./Slider.styled";
 
-interface SliderProps {
-  children: React.ReactNode;
-  showSlides: 3 | 5;
-  width: string;
-  height: string;
-}
+import { useWindowWidth } from "./../../hooks/useWindowWidth";
+import { useThrottle } from "../../hooks/useThrottle";
 
-export const Slider = ({
-  children,
-  showSlides,
-  width,
-  height,
-}: SliderProps) => {
+export const Slider = ({ children }: SliderProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const childrenLength = React.Children.count(children);
+  const { windowWidth } = useWindowWidth();
+  const showSlides = 3;
 
   const getSlideClass = (index: number) => {
     const relativeIndex =
@@ -55,28 +49,23 @@ export const Slider = ({
     }
   };
 
-  const prevSlide = () => {
+  const prevSlide = () =>
     setCurrentIndex((currentIndex - 1 + childrenLength) % childrenLength);
-  };
 
-  const nextSlide = () => {
-    setCurrentIndex((currentIndex + 1) % childrenLength);
-  };
+  const nextSlide = () => setCurrentIndex((currentIndex + 1) % childrenLength);
+
+  const throttlePrevSlide = useThrottle(prevSlide, 1000);
+  const throttleNextSlide = useThrottle(nextSlide, 1000);
 
   return (
-    <SliderContainer height={height}>
+    <SliderContainer>
       {React.Children.map(children, (child, index) => (
-        <Slide
-          key={index}
-          width={width}
-          height={height}
-          className={getSlideClass(index)}
-        >
+        <Slide width={windowWidth} key={index} className={getSlideClass(index)}>
           {child}
         </Slide>
       ))}
-      <PrevButton onClick={prevSlide}>&lt;</PrevButton>
-      <NextButton onClick={nextSlide}>&gt;</NextButton>
+      <PrevButton onClick={throttlePrevSlide}>&lt;</PrevButton>
+      <NextButton onClick={throttleNextSlide}>&gt;</NextButton>
     </SliderContainer>
   );
 };
