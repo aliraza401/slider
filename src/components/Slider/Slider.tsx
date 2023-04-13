@@ -1,70 +1,86 @@
-import React, { useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { SliderContainer, Slide } from "./Slider.styled";
 import { SliderProps } from "./Slider.interface";
-import {
-  SliderContainer,
-  Slide,
-  PrevButton,
-  NextButton,
-} from "./Slider.styled";
 
-import { useWindowWidth } from "./../../hooks/useWindowWidth";
-import { useThrottle } from "../../hooks/useThrottle";
+export const Slider: React.FC<SliderProps> = ({
+  children,
+  orientation = "horizontal",
+  cells = 9,
+}) => {
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const cellsRef = useRef<NodeListOf<HTMLDivElement>>();
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [radius, setRadius] = useState(0);
 
-export const Slider = ({ children, showSlides }: SliderProps) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const childrenLength = React.Children.count(children);
-  const { windowWidth } = useWindowWidth();
+  const cellCount = cells;
+  const isHorizontal = orientation === "horizontal";
+  const rotateFn = orientation === "horizontal" ? "rotateY" : "rotateX";
 
-  const getSlideClass = (index: number) => {
-    const relativeIndex =
-      (index - currentIndex + childrenLength) % childrenLength;
+  useLayoutEffect(() => {
+    if (carouselRef.current) {
+      cellsRef.current =
+        carouselRef.current.querySelectorAll(".carousel__cell");
+      changeCarousel();
+    }
+  }, [cellCount, isHorizontal, rotateFn]);
 
-    if (showSlides === 3) {
-      switch (relativeIndex) {
-        case 0:
-          return "center";
-        case 1:
-          return "right-curved";
-        case childrenLength - 1:
-          return "left-curved";
-        default:
-          return "hidden";
-      }
-    } else {
-      switch (relativeIndex) {
-        case 0:
-          return "center";
-        case 1:
-          return "right";
-        case childrenLength - 1:
-          return "left";
-        case 2:
-          return "right-far";
-        case childrenLength - 2:
-          return "left-far";
-        default:
-          return "hidden";
+  const changeCarousel = () => {
+    const theta = 360 / cellCount;
+    const cellSize = isHorizontal
+      ? carouselRef.current!.offsetWidth
+      : carouselRef.current!.offsetHeight;
+    const newRadius = Math.round(cellSize / 2 / Math.tan(Math.PI / cellCount));
+    setRadius(newRadius);
+
+    for (let i = 0; i < cellsRef.current!.length; i++) {
+      const cell = cellsRef.current![i];
+      if (i < cellCount) {
+        cell.style.opacity = "1";
+        if (orientation === "vertical") {
+          cell.style.paddingTop = "0.5rem";
+          cell.style.paddingBottom = "0.5rem";
+        } else {
+          cell.style.paddingLeft = "0.5rem";
+          cell.style.paddingRight = "0.5rem";
+        }
+
+        const cellAngle = theta * i;
+        cell.style.transform =
+          rotateFn + "(" + cellAngle + "deg) translateZ(" + newRadius + "px)";
+      } else {
+        cell.style.opacity = "0";
+        cell.style.transform = "none";
       }
     }
   };
 
-  const prevSlide = () =>
-    setCurrentIndex((currentIndex - 1 + childrenLength) % childrenLength);
+  const rotateCarousel = () => {
+    const angle = (360 / cellCount) * selectedIndex * -1;
+    carouselRef.current!.style.transform =
+      "translateZ(" + -radius + "px) " + rotateFn + "(" + angle + "deg)";
+  };
 
-  const nextSlide = () => setCurrentIndex((currentIndex + 1) % childrenLength);
+  useEffect(() => rotateCarousel(), [selectedIndex, radius]);
 
-  const throttlePrevSlide = useThrottle(prevSlide, 1000);
-  const throttleNextSlide = useThrottle(nextSlide, 1000);
+  const handlePrevClick = () => setSelectedIndex(selectedIndex - 1);
+  const handleNextClick = () => setSelectedIndex(selectedIndex + 1);
 
   return (
-    <SliderContainer showSlides={showSlides}>
-      {React.Children.map(children, (child, index) => (
-        <Slide showSlides={showSlides} width={windowWidth} key={index} className={getSlideClass(index)}>
-          {child}
-        </Slide>
-      ))}
-      <PrevButton onClick={throttlePrevSlide}>&lt;</PrevButton>
-      <NextButton onClick={throttleNextSlide}>&gt;</NextButton>
+    <SliderContainer>
+      <div className="scene">
+        <div className="carousel" ref={carouselRef}>
+          {React.Children.map(children, (child) => (
+            <Slide className="carousel__cell">{child}</Slide>
+          ))}
+        </div>
+      </div>
+
+      <button className="previous-button" onClick={handlePrevClick}>
+        {"<"}
+      </button>
+      <button className="next-button" onClick={handleNextClick}>
+        {">"}
+      </button>
     </SliderContainer>
   );
 };

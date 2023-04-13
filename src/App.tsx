@@ -4,13 +4,13 @@ import { imagesArray } from "./constraints/images";
 
 function App() {
   return (
-    <div style={{ marginTop: 100 }}>
-      <Slider showSlides={3}>
+    <>
+      <Slider cells={15} orientation="horizontal">
         {imagesArray.map((item: string, index) => (
-          <StyledImage src={item} key={index} />
+            <StyledImage src={item} key={index} />
         ))}
       </Slider>
-    </div>
+    </>
   );
 }
 
